@@ -2,6 +2,18 @@
 
 This repository contains examples demonstrating the usage of the Model Context Protocol (MCP) for [Recall Kitchen](https://recallkitchen.com/), including searching recalls.
 
+## MCP Server
+
+Recall Kitchen hosts a MCP server at:
+
+```
+https://app.recallkitchen.com/mcp
+```
+
+Currently we offer the following tools:
+
+- `search_product_recalls(query: string, limit: int)`
+
 ## Getting Started
 
 1. Clone this repository
