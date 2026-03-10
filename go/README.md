@@ -1,16 +1,16 @@
 # MCP Go Examples
 
-This directory contains Go examples for interacting with MCP (Model Context Protocol) servers.
+This directory contains Go examples of the Model Context Protocol (MCP) for [Recall Kitchen](https://recallkitchen.com/), including searching recalls.
 
 ## Examples
 
-### search_recalls
+### search_product_recalls
 
 A client example for calling the `search_product_recalls` tool on an MCP server.
 
-- **Location**: `search_recalls/`
+- **Location**: `search_product_recalls/`
 - **Description**: Demonstrates HTTP-based JSON-RPC tool calls for product recall searches
-- **Usage**: See `search_recalls/README.md` for details
+- **Usage**: See `search_product_recalls/README.md` for details
 
 ## Getting Started
 
