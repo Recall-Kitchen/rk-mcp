@@ -10,14 +10,12 @@ A client example for calling the `search_product_recalls` tool on an MCP server.
 
 - **Location**: `search_product_recalls/`
 - **Description**: Demonstrates HTTP-based JSON-RPC tool calls for product recall searches
-- **Usage**: See `search_product_recalls/README.md` for details
 
 ## Getting Started
 
 1. Ensure you have Go 1.26.1 or later installed.
-2. Start your MCP server.
-3. Run the desired example as described in its README.
+2. Signup for Recall Kitchen and setup authentication.
 
-## Contributing
+## Commands
 
-Add new examples in subdirectories with their own README.md files.
+- [`search_product_recalls/`](./search_product_recalls/): Example containing a MCP client for searching product recalls.

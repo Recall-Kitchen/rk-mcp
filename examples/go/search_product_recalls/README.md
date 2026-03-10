@@ -4,11 +4,11 @@ This example demonstrates a Go client for calling the `search_product_recalls` t
 
 ## What It Does
 
-The client sends a JSON-RPC request to invoke the `search_product_recalls` tool with a query for "apples". The server responds with product recall information related to the query, formatted according to the MCP specification.
+The client sends a JSON-RPC request to invoke the `search_product_recalls` tool with a query for "contaminated". The server responds with product recall information related to the query, formatted according to the MCP specification.
 
 ## Running the Example
 
-1. Start your MCP server on `https://app.recallkitchen.com/mcp`.
+1. Sign up for [Recall Kitchen](https://recallkitchen.com).
 
 2. Run the client:
 
@@ -35,6 +35,6 @@ Arguments: map[string]any{
 },
 ```
 
-## Server Compatibility
+## Support
 
-This client works with MCP servers that support HTTP-based JSON-RPC for tool calls. Ensure your server implements the `tools/call` method for `search_product_recalls`.
+Contact the support team at [`support@recallkitchen.com`](mailto:support@recallkitchen.com)

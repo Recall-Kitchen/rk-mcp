@@ -8,9 +8,12 @@ This repository contains examples demonstrating the usage of the Model Context P
 2. Navigate to the desired example directory
 3. Follow the instructions in the example's README
 
-## Examples
+## Project Structure
 
-- **Go**: [Go Examples](go/README.md)
+This repository is organized as follows:
+
+- Go
+   - [`examples/go/search_product_recalls/`](examples/go/search_product_recalls/): A client example for calling the `search_product_recalls` tool.
 
 ## Contributing
 
