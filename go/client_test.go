@@ -1,8 +1,10 @@
 package rkmcp_test
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -17,7 +19,7 @@ func TestClient_SearchProductRecalls(t *testing.T) {
 	}
 
 	cc, err := rkmcp.NewClient(rkmcp.Config{
-		ServerURL: "http://localhost:8080/mcp",
+		ServerURL: cmp.Or(os.Getenv("MCP_SERVER_URL"), "https://app.recallkitchen.com/mcp"),
 		Timeout:   10 * time.Second,
 	})
 	require.NoError(t, err)
