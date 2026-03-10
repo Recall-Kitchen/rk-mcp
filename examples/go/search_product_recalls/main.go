@@ -60,6 +60,7 @@ func main() {
 		Name: "search_product_recalls",
 		Arguments: map[string]any{
 			"query": "contaminated",
+			"limit": 1,
 		},
 	})
 	if err != nil {
