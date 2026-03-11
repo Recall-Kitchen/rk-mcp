@@ -24,7 +24,7 @@ func TestClient_SearchProductRecalls(t *testing.T) {
 		Timeout:   10 * time.Second,
 	})
 
-	if strings.EqualFold(os.Getenv("GITHUB_ACTIONS"), "1") {
+	if os.Getenv("GITHUB_ACTIONS") != "" {
 		if err != nil && strings.Contains(err.Error(), "x402 client was not configured") {
 			t.Skip("full x402 config not setup")
 		}
