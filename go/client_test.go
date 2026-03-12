@@ -3,9 +3,9 @@ package rkmcp_test
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -25,7 +25,7 @@ func TestClient_SearchProductRecalls(t *testing.T) {
 	})
 
 	if os.Getenv("GITHUB_ACTIONS") != "" {
-		if err != nil && strings.Contains(err.Error(), "x402 client was not configured") {
+		if err != nil && errors.Is(err, rkmcp.ErrX402NotConfigured) {
 			t.Skip("full x402 config not setup")
 		}
 	} else {

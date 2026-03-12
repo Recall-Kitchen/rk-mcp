@@ -64,7 +64,7 @@ func NewClient(config Config) (Client, error) {
 		return nil, fmt.Errorf("creating x402 payment client wrapper: %w", err)
 	}
 	if paymentClient == nil {
-		return nil, errors.New("x402 client was not configured")
+		return out, ErrX402NotConfigured
 	}
 
 	out.x402Session = x402mcp.NewX402MCPClient(session, paymentClient, x402mcp.Options{
@@ -81,6 +81,10 @@ func NewClient(config Config) (Client, error) {
 
 	return out, nil
 }
+
+var (
+	ErrX402NotConfigured = errors.New("x402 client was not configured")
+)
 
 func createX402PaymentClient() (*x402.X402Client, error) {
 	privateKey := strings.TrimSpace(os.Getenv("X402_EVM_PRIVATE_KEY"))
