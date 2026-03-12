@@ -119,17 +119,27 @@ func (c *client) Close() error {
 }
 
 func (c *client) SearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error) {
-	callCtx, callCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	callCtx, callCancel := context.WithTimeout(ctx, 10*time.Second)
 	defer callCancel()
 
-	limit = cmp.Or(limit, 3)
+	limit = min(cmp.Or(limit, 3), 100) // default 3, but (0,100]
+	if limit <= 0 {
+		limit = 3
+	}
 
-	result, err := c.x402Session.CallTool(callCtx, "search_product_recalls", map[string]interface{}{
+	if c.x402Session != nil {
+		return c.x402SearchProductRecalls(callCtx, query, limit)
+	}
+	return c.mcpSearchProductRecalls(callCtx, query, limit)
+}
+
+func (c *client) x402SearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error) {
+	result, err := c.x402Session.CallTool(ctx, "search_product_recalls", map[string]interface{}{
 		"query": query,
 		"limit": limit,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("calling tool search_product_recalls: %w", err)
+		return nil, fmt.Errorf("calling tool x402+MCP search_product_recalls: %w", err)
 	}
 
 	if result.IsError {
@@ -141,7 +151,7 @@ func (c *client) SearchProductRecalls(ctx context.Context, query string, limit i
 		fmt.Printf("PaymentResponse: %#v\n", result.PaymentResponse)
 		fmt.Printf("PaymentMade=%v\n", result.PaymentMade)
 
-		return nil, errors.New("MCP tool call retrned IsError=true")
+		return nil, errors.New("x402+MCP tool call retrned IsError=true")
 	}
 
 	if result.PaymentResponse != nil {
@@ -160,8 +170,34 @@ func (c *client) SearchProductRecalls(ctx context.Context, query string, limit i
 		if err == nil {
 			return recalls.Recalls, nil
 		}
-		return nil, fmt.Errorf("reading search_product_recalls response json: %w", err)
+		return nil, fmt.Errorf("reading x402+MCP search_product_recalls response json: %w", err)
 	}
 
-	return nil, errors.New("no response from search_product_recalls found")
+	return nil, errors.New("no response from x402+MCP search_product_recalls found")
+}
+
+func (c *client) mcpSearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error) {
+	result, err := c.session.CallTool(ctx, &mcpsdk.CallToolParams{
+		Name: "search_product_recalls",
+		Arguments: map[string]any{
+			"query": query,
+			"limit": limit,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("calling tool search_product_recalls: %w", err)
+	}
+
+	for _, content := range result.Content {
+		if textContent, ok := content.(*mcpsdk.TextContent); ok {
+			var recalls Recalls
+			err := json.NewDecoder(strings.NewReader(textContent.Text)).Decode(&recalls)
+			if err == nil {
+				return recalls.Recalls, nil
+			}
+			return nil, fmt.Errorf("reading search_product_recalls response json: %w", err)
+		}
+	}
+
+	return nil, errors.New("no response from MCP search_product_recalls found")
 }
