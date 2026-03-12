@@ -12,7 +12,17 @@ https://app.recallkitchen.com/mcp
 
 Currently we offer the following tools:
 
+**Payment Required**
+
+Recall Kitchen offers a few MCP tools that require payment via x402:
+
 - `search_product_recalls(query: string, limit: int)`
+
+**Free Tools**
+
+Recall Kitchen offers a few tools for free:
+
+- TODO
 
 ## Getting Started
 
