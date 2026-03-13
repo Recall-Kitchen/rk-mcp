@@ -27,13 +27,13 @@ func main() {
 	})
 	if err != nil && errors.Is(err, rkmcp.ErrX402NotConfigured) {
 		fmt.Printf("ERROR: missing EVM private key (Config.EVMPrivateKey or X402_EVM_PRIVATE_KEY in the environment)")
-		os.Exit(1)
+		return
 	}
 
 	recalls, err := cc.SearchProductRecalls(context.Background(), "bacteria", 1)
 	if err != nil {
 		fmt.Printf("ERROR: searching product recalls: %v\n", err)
-		os.Exit(1)
+		return
 	}
 
 	for _, recall := range recalls {
