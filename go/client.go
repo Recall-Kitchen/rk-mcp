@@ -48,8 +48,8 @@ func NewClient(config Config) (Client, error) {
 	config.ServerURL = cmp.Or(config.ServerURL, defaultServerURL)
 	config.Timeout = cmp.Or(config.Timeout, defaultTimeout)
 
-	ctx, _ := context.WithTimeout(context.Background(), config.Timeout)
-
+	ctx, cancel := context.WithTimeout(context.Background(), config.Timeout)
+	defer cancel()
 	session, err := cc.Connect(ctx, &mcpsdk.StreamableClientTransport{Endpoint: config.ServerURL}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating MCP client: %w", err)
