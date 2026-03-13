@@ -26,6 +26,8 @@ type Client interface {
 type Config struct {
 	ServerURL string
 	Timeout   time.Duration
+
+	EVMPrivateKey string
 }
 
 var (
@@ -59,7 +61,7 @@ func NewClient(config Config) (Client, error) {
 		session: session,
 	}
 
-	paymentClient, err := createX402PaymentClient()
+	paymentClient, err := createX402PaymentClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("creating x402 payment client wrapper: %w", err)
 	}
@@ -86,8 +88,8 @@ var (
 	ErrX402NotConfigured = errors.New("x402 client was not configured")
 )
 
-func createX402PaymentClient() (*x402.X402Client, error) {
-	privateKey := strings.TrimSpace(os.Getenv("X402_EVM_PRIVATE_KEY"))
+func createX402PaymentClient(config Config) (*x402.X402Client, error) {
+	privateKey := strings.TrimSpace(cmp.Or(config.EVMPrivateKey, os.Getenv("X402_EVM_PRIVATE_KEY")))
 	if privateKey == "" {
 		return nil, nil
 	}
