@@ -3,8 +3,8 @@ module github.com/Recall-Kitchen/rk-mcp/go
 go 1.26.1
 
 require (
-	github.com/coinbase/x402/go v0.0.0-20260311170813-ab5628c1b725
-	github.com/modelcontextprotocol/go-sdk v1.4.0
+	github.com/coinbase/x402/go v0.0.0-20260313175905-13ad532b03ea
+	github.com/modelcontextprotocol/go-sdk v1.4.1
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -28,7 +28,7 @@ require (
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
-	github.com/segmentio/encoding v0.5.3 // indirect
+	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/supranational/blst v0.3.16-0.20250831170142-f48500c1fdbe // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
