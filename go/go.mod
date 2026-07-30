@@ -3,8 +3,8 @@ module github.com/Recall-Kitchen/rk-mcp/go
 go 1.26.1
 
 require (
-	github.com/coinbase/x402/go v0.0.0-20260311170813-ab5628c1b725
-	github.com/modelcontextprotocol/go-sdk v1.4.0
+	github.com/coinbase/x402/go v0.0.0-20260421184015-dd927a26cfef
+	github.com/modelcontextprotocol/go-sdk v1.7.0
 	github.com/stretchr/testify v1.11.1
 )
 
