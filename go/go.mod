@@ -3,9 +3,9 @@ module github.com/Recall-Kitchen/rk-mcp/go
 go 1.26.1
 
 require (
-	github.com/coinbase/x402/go v0.0.0-20260311170813-ab5628c1b725
 	github.com/modelcontextprotocol/go-sdk v1.4.0
 	github.com/stretchr/testify v1.11.1
+	github.com/x402-foundation/x402/go v0.0.0-20260529172747-45d81d46e5bd
 )
 
 require (
@@ -34,9 +34,9 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
