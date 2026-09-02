@@ -51,6 +51,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "ERROR: searching product recalls: %v\n", err)
 		os.Exit(1)
 	}
+	if res == nil || len(res.Recalls) == 0 {
+		fmt.Fprintln(os.Stderr, "ERROR: no recalls returned")
+		os.Exit(1)
+	}
 
 	for _, recall := range res.Recalls {
 		fmt.Printf("ID: %s\n", recall.ID)

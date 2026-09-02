@@ -25,12 +25,9 @@ func testClient(t *testing.T) rkmcp.Client {
 		APIKey:    apiKey,
 	})
 	if apiKey == "" {
-		if err != nil {
-			t.Skip("set RK_API_KEY (or X402_EVM_PRIVATE_KEY) to run live MCP tests")
-		}
-	} else {
-		require.NoError(t, err)
+		t.Skip("set RK_API_KEY or RECALL_KITCHEN_API_KEY to run live MCP tests")
 	}
+	require.NoError(t, err)
 	t.Cleanup(func() { _ = cc.Close() })
 	return cc
 }
@@ -64,10 +61,38 @@ func TestClient_GetProductRecall(t *testing.T) {
 func TestClient_SearchRecallsByIdentifier(t *testing.T) {
 	cc := testClient(t)
 
-	res, err := cc.SearchRecallsByIdentifier(context.Background(), rkmcp.IdentifierOptions{
-		ProductName: "chicken",
-		Limit:       1,
-	})
+	found, err := cc.SearchProductRecalls(context.Background(), "chicken", 5)
+	require.NoError(t, err)
+	require.NotEmpty(t, found)
+
+	opts := rkmcp.IdentifierOptions{Limit: 3}
+	for _, hit := range found {
+		detail, err := cc.GetProductRecall(context.Background(), hit.ID)
+		require.NoError(t, err)
+		if detail.Extracted == nil {
+			continue
+		}
+		for _, p := range detail.Extracted.Products {
+			if len(p.LotCodes) > 0 {
+				opts.LotCode = p.LotCodes[0]
+			}
+			if len(p.UPCs) > 0 {
+				opts.UPC = p.UPCs[0]
+			}
+			if opts.LotCode != "" || opts.UPC != "" {
+				break
+			}
+		}
+		if opts.LotCode != "" || opts.UPC != "" {
+			break
+		}
+	}
+	if opts.LotCode == "" && opts.UPC == "" {
+		t.Skip("no extracted lot or UPC in search hits")
+	}
+
+	res, err := cc.SearchRecallsByIdentifier(context.Background(), opts)
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	require.NotEmpty(t, res.Recalls)
 }

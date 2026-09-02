@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,12 +20,24 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v7
 
-    - name: Examples
-      run: |
-        cd examples/go
-        go run ./search_product_recalls
-        go run ./get_product_recall
-        go run ./search_by_identifier
-
     - name: Test
-      run: cd ./go/ && go test ./...
+      env:
+        RECALL_KITCHEN_API_KEY: ${{ secrets.RECALL_KITCHEN_API_KEY }}
+      run: cd ./go/ && go test ./... -count=1 -timeout 2m
+
+    - name: Examples
+      env:
+        RECALL_KITCHEN_API_KEY: ${{ secrets.RECALL_KITCHEN_API_KEY }}
+      run: |
+        if [ -z "$RECALL_KITCHEN_API_KEY" ]; then
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            echo "RECALL_KITCHEN_API_KEY not available on this PR; skipping live examples"
+            exit 0
+          fi
+          echo "RECALL_KITCHEN_API_KEY secret is required"
+          exit 1
+        fi
+        cd examples/go
+        go run ./search_product_recalls -query contamination -limit 1
+        go run ./get_product_recall -query contamination
+        go run ./search_by_identifier -lot B-5 -limit 3
