@@ -13,37 +13,54 @@ import (
 )
 
 func main() {
-	var serverURL string
-	var timeout time.Duration
-
+	var (
+		serverURL string
+		query     string
+		location  string
+		limit     int
+	)
 	flag.StringVar(&serverURL, "address", "https://app.recallkitchen.com/mcp", "MCP server HTTP endpoint")
-	flag.DurationVar(&timeout, "timeout", 15*time.Second, "request timeout")
+	flag.StringVar(&query, "query", "contamination", "search query")
+	flag.StringVar(&location, "location", "", "optional location filter (e.g. Iowa)")
+	flag.IntVar(&limit, "limit", 3, "max results (1-100)")
 	flag.Parse()
 
 	cc, err := rkmcp.NewClient(rkmcp.Config{
-		ServerURL:     cmp.Or(os.Getenv("MCP_SERVER_URL"), serverURL),
-		Timeout:       10 * time.Second,
-		EVMPrivateKey: "", // or set X402_EVM_PRIVATE_KEY env var
+		ServerURL: cmp.Or(os.Getenv("MCP_SERVER_URL"), serverURL),
+		Timeout:   20 * time.Second,
+		// APIKey from RK_API_KEY / RECALL_KITCHEN_API_KEY, or:
+		// EVMPrivateKey / X402_EVM_PRIVATE_KEY for anonymous x402.
 	})
 	if err != nil && errors.Is(err, rkmcp.ErrX402NotConfigured) {
-		fmt.Printf("ERROR: missing EVM private key (Config.EVMPrivateKey or X402_EVM_PRIVATE_KEY in the environment)")
-		return
+		fmt.Fprintln(os.Stderr, "Set RK_API_KEY (free) or X402_EVM_PRIVATE_KEY (anonymous USDC on Base).")
+		fmt.Fprintln(os.Stderr, "Create a key at https://app.recallkitchen.com/#/integrations")
+		os.Exit(0)
 	}
-
-	recalls, err := cc.SearchProductRecalls(context.Background(), "bacteria", 1)
 	if err != nil {
-		fmt.Printf("ERROR: searching product recalls: %v\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+		os.Exit(1)
+	}
+	defer cc.Close()
+
+	res, err := cc.SearchProductRecallsOpts(context.Background(), rkmcp.SearchOptions{
+		Query:    query,
+		Location: location,
+		Limit:    limit,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: searching product recalls: %v\n", err)
+		os.Exit(1)
 	}
 
-	for _, recall := range recalls {
-		fmt.Printf("\n")
+	for _, recall := range res.Recalls {
 		fmt.Printf("ID: %s\n", recall.ID)
 		fmt.Printf("Source: %s\n", recall.Source)
 		fmt.Printf("Title: %s\n", recall.Title)
-		fmt.Printf("PublishedOn: %s\n", recall.PublishedOn)
-		fmt.Printf("\n")
-		fmt.Printf("Description: %s\n", recall.Description)
-		fmt.Printf("\n")
+		fmt.Printf("PublishedOn: %s\n", recall.PublishedOn.Format(time.DateOnly))
+		fmt.Printf("URL: %s\n", recall.URL)
+		if recall.Extracted != nil && len(recall.Extracted.Locations) > 0 {
+			fmt.Printf("Locations: %v\n", recall.Extracted.Locations)
+		}
+		fmt.Printf("\n%s\n\n", recall.Description)
 	}
 }

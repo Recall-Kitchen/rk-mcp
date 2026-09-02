@@ -6,26 +6,34 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	x402 "github.com/x402-foundation/x402/go"
 	x402mcp "github.com/x402-foundation/x402/go/mcp"
 	evm "github.com/x402-foundation/x402/go/mechanisms/evm/exact/client"
 	evmsigners "github.com/x402-foundation/x402/go/signers/evm"
-	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type Client interface {
 	Close() error
 
 	SearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error)
+	SearchProductRecallsOpts(ctx context.Context, opts SearchOptions) (*SearchResult, error)
+	GetProductRecall(ctx context.Context, recallID string) (*Recall, error)
+	SearchRecallsByIdentifier(ctx context.Context, opts IdentifierOptions) (*SearchResult, error)
 }
 
 type Config struct {
 	ServerURL string
 	Timeout   time.Duration
+
+	// APIKey is a Recall Kitchen rk_ key. Sent as X-API-Key (Grok-safe; also
+	// accepted as Authorization: Bearer). When set, search tools skip x402.
+	APIKey string
 
 	EVMPrivateKey string
 }
@@ -44,13 +52,24 @@ func NewClient(config Config) (Client, error) {
 	}
 	cc := mcpsdk.NewClient(clientImpl, nil)
 
-	// Set defaults if user didn't provide
 	config.ServerURL = cmp.Or(config.ServerURL, defaultServerURL)
 	config.Timeout = cmp.Or(config.Timeout, defaultTimeout)
+	config.APIKey = strings.TrimSpace(cmp.Or(config.APIKey, os.Getenv("RK_API_KEY"), os.Getenv("RECALL_KITCHEN_API_KEY")))
+
+	transport := &mcpsdk.StreamableClientTransport{
+		Endpoint:             config.ServerURL,
+		DisableStandaloneSSE: true,
+	}
+	if config.APIKey != "" {
+		transport.HTTPClient = &http.Client{
+			Timeout:   config.Timeout,
+			Transport: apiKeyRoundTripper{key: config.APIKey, base: http.DefaultTransport},
+		}
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.Timeout)
 	defer cancel()
-	session, err := cc.Connect(ctx, &mcpsdk.StreamableClientTransport{Endpoint: config.ServerURL}, nil)
+	session, err := cc.Connect(ctx, transport, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating MCP client: %w", err)
 	}
@@ -59,6 +78,10 @@ func NewClient(config Config) (Client, error) {
 		config:  config,
 		client:  cc,
 		session: session,
+	}
+
+	if config.APIKey != "" {
+		return out, nil
 	}
 
 	paymentClient, err := createX402PaymentClient(config)
@@ -73,7 +96,7 @@ func NewClient(config Config) (Client, error) {
 		AutoPayment: x402mcp.BoolPtr(true),
 		OnPaymentRequested: func(context x402mcp.PaymentRequiredContext) (bool, error) {
 			price := context.PaymentRequired.Accepts[0]
-			fmt.Printf("\n💰 Payment required for tool: %s\n", context.ToolName)
+			fmt.Printf("\nPayment required for tool: %s\n", context.ToolName)
 			fmt.Printf("   Amount: %s (%s)\n", price.Amount, price.Asset)
 			fmt.Printf("   Network: %s\n", price.Network)
 			fmt.Printf("   Approving payment...\n")
@@ -87,6 +110,21 @@ func NewClient(config Config) (Client, error) {
 var (
 	ErrX402NotConfigured = errors.New("x402 client was not configured")
 )
+
+type apiKeyRoundTripper struct {
+	key  string
+	base http.RoundTripper
+}
+
+func (t apiKeyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	r := req.Clone(req.Context())
+	r.Header.Set("X-API-Key", t.key)
+	base := t.base
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	return base.RoundTrip(r)
+}
 
 func createX402PaymentClient(config Config) (*x402.X402Client, error) {
 	privateKey := strings.TrimSpace(cmp.Or(config.EVMPrivateKey, os.Getenv("X402_EVM_PRIVATE_KEY")))
@@ -116,90 +154,146 @@ func (c *client) Close() error {
 	if c.session != nil {
 		c.session.Close()
 	}
-
 	return nil
 }
 
+func clampLimit(limit int) int {
+	limit = min(cmp.Or(limit, 3), 100)
+	if limit <= 0 {
+		return 3
+	}
+	return limit
+}
+
 func (c *client) SearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error) {
-	callCtx, callCancel := context.WithTimeout(ctx, 10*time.Second)
+	res, err := c.SearchProductRecallsOpts(ctx, SearchOptions{Query: query, Limit: limit})
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, nil
+	}
+	return res.Recalls, nil
+}
+
+func (c *client) SearchProductRecallsOpts(ctx context.Context, opts SearchOptions) (*SearchResult, error) {
+	args := map[string]any{}
+	if q := strings.TrimSpace(opts.Query); q != "" {
+		args["query"] = q
+	}
+	if s := strings.TrimSpace(opts.Source); s != "" {
+		args["source"] = s
+	}
+	if s := strings.TrimSpace(opts.Since); s != "" {
+		args["since"] = s
+	}
+	if s := strings.TrimSpace(opts.Until); s != "" {
+		args["until"] = s
+	}
+	if s := strings.TrimSpace(opts.Location); s != "" {
+		args["location"] = s
+	}
+	if opts.Offset > 0 {
+		args["offset"] = opts.Offset
+	}
+	args["limit"] = clampLimit(opts.Limit)
+
+	var out SearchResult
+	if err := c.callTool(ctx, "search_product_recalls", args, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *client) GetProductRecall(ctx context.Context, recallID string) (*Recall, error) {
+	recallID = strings.TrimSpace(recallID)
+	if recallID == "" {
+		return nil, fmt.Errorf("recall_id is required")
+	}
+	var out Recall
+	if err := c.callTool(ctx, "get_product_recall", map[string]any{"recall_id": recallID}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *client) SearchRecallsByIdentifier(ctx context.Context, opts IdentifierOptions) (*SearchResult, error) {
+	args := map[string]any{}
+	if s := strings.TrimSpace(opts.UPC); s != "" {
+		args["upc"] = s
+	}
+	if s := strings.TrimSpace(opts.LotCode); s != "" {
+		args["lot_code"] = s
+	}
+	if s := strings.TrimSpace(opts.ModelNumber); s != "" {
+		args["model_number"] = s
+	}
+	if s := strings.TrimSpace(opts.ProductName); s != "" {
+		args["product_name"] = s
+	}
+	if opts.Offset > 0 {
+		args["offset"] = opts.Offset
+	}
+	args["limit"] = clampLimit(opts.Limit)
+	if len(args) == 1 { // only limit
+		return nil, fmt.Errorf("upc, lot_code, model_number, or product_name is required")
+	}
+
+	var out SearchResult
+	if err := c.callTool(ctx, "search_recalls_by_identifier", args, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *client) callTool(ctx context.Context, name string, args map[string]any, dest any) error {
+	callCtx, callCancel := context.WithTimeout(ctx, cmp.Or(c.config.Timeout, 10*time.Second))
 	defer callCancel()
 
-	limit = min(cmp.Or(limit, 3), 100) // default 3, but (0,100]
-	if limit <= 0 {
-		limit = 3
-	}
-
 	if c.x402Session != nil {
-		return c.x402SearchProductRecalls(callCtx, query, limit)
-	}
-	return c.mcpSearchProductRecalls(callCtx, query, limit)
-}
-
-func (c *client) x402SearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error) {
-	result, err := c.x402Session.CallTool(ctx, "search_product_recalls", map[string]interface{}{
-		"query": query,
-		"limit": limit,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("calling tool x402+MCP search_product_recalls: %w", err)
-	}
-
-	if result.IsError {
-		fmt.Printf("IsError=%v\n", result.IsError)
+		result, err := c.x402Session.CallTool(callCtx, name, args)
+		if err != nil {
+			return fmt.Errorf("calling tool x402+MCP %s: %w", name, err)
+		}
+		if result.IsError {
+			var bits []string
+			for _, content := range result.Content {
+				bits = append(bits, content.Text)
+			}
+			return fmt.Errorf("x402+MCP %s: %s", name, strings.Join(bits, " "))
+		}
 		for _, content := range result.Content {
-			fmt.Printf("\n%v\n", content.Text)
+			if err := json.NewDecoder(strings.NewReader(content.Text)).Decode(dest); err != nil {
+				return fmt.Errorf("reading x402+MCP %s response json: %w", name, err)
+			}
+			return nil
 		}
-
-		fmt.Printf("PaymentResponse: %#v\n", result.PaymentResponse)
-		fmt.Printf("PaymentMade=%v\n", result.PaymentMade)
-
-		return nil, errors.New("x402+MCP tool call retrned IsError=true")
+		return fmt.Errorf("no response from x402+MCP %s", name)
 	}
 
-	if result.PaymentResponse != nil {
-		fmt.Printf("\n%#v\n", result.PaymentResponse)
-
-		fmt.Println("\n📦 Payment Receipt:")
-		fmt.Printf("   Success: %v\n", result.PaymentResponse.Success)
-		if result.PaymentResponse.Transaction != "" {
-			fmt.Printf("   Transaction: %s\n", result.PaymentResponse.Transaction)
-		}
-	}
-
-	for _, content := range result.Content {
-		var recalls Recalls
-		err := json.NewDecoder(strings.NewReader(content.Text)).Decode(&recalls)
-		if err == nil {
-			return recalls.Recalls, nil
-		}
-		return nil, fmt.Errorf("reading x402+MCP search_product_recalls response json: %w", err)
-	}
-
-	return nil, errors.New("no response from x402+MCP search_product_recalls found")
-}
-
-func (c *client) mcpSearchProductRecalls(ctx context.Context, query string, limit int) ([]Recall, error) {
-	result, err := c.session.CallTool(ctx, &mcpsdk.CallToolParams{
-		Name: "search_product_recalls",
-		Arguments: map[string]any{
-			"query": query,
-			"limit": limit,
-		},
+	result, err := c.session.CallTool(callCtx, &mcpsdk.CallToolParams{
+		Name:      name,
+		Arguments: args,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("calling tool search_product_recalls: %w", err)
+		return fmt.Errorf("calling tool %s: %w", name, err)
 	}
-
+	if result.IsError {
+		var bits []string
+		for _, content := range result.Content {
+			if textContent, ok := content.(*mcpsdk.TextContent); ok {
+				bits = append(bits, textContent.Text)
+			}
+		}
+		return fmt.Errorf("%s: %s", name, strings.Join(bits, " "))
+	}
 	for _, content := range result.Content {
 		if textContent, ok := content.(*mcpsdk.TextContent); ok {
-			var recalls Recalls
-			err := json.NewDecoder(strings.NewReader(textContent.Text)).Decode(&recalls)
-			if err == nil {
-				return recalls.Recalls, nil
+			if err := json.NewDecoder(strings.NewReader(textContent.Text)).Decode(dest); err != nil {
+				return fmt.Errorf("reading %s response json: %w", name, err)
 			}
-			return nil, fmt.Errorf("reading search_product_recalls response json: %w", err)
+			return nil
 		}
 	}
-
-	return nil, errors.New("no response from MCP search_product_recalls found")
+	return fmt.Errorf("no response from MCP %s", name)
 }

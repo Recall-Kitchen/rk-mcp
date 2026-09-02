@@ -21,7 +21,10 @@ jobs:
 
     - name: Examples
       run: |
-        cd examples/go/search_product_recalls && go run . && cd -
+        cd examples/go
+        go run ./search_product_recalls
+        go run ./get_product_recall
+        go run ./search_by_identifier
 
     - name: Test
       run: cd ./go/ && go test ./...
