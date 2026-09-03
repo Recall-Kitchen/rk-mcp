@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.recallkitchen/recall-kitchen",
+  "title": "Recall Kitchen",
+  "description": "Search U.S. CPSC, FDA food, FDA MedWatch, and USDA product recalls via hosted MCP.",
+  "version": "1.0.0",
+  "websiteUrl": "https://recallkitchen.com",
+  "repository": {
+    "url": "https://github.com/Recall-Kitchen/rk-mcp",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://app.recallkitchen.com/mcp",
+      "headers": [
+        {
+          "name": "X-API-Key",
+          "description": "API key (rk_...). Prefer over Authorization for Grok. Env: RECALL_KITCHEN_API_KEY.",
+          "isSecret": true
+        },
+        {
+          "name": "Authorization",
+          "description": "Bearer rk_... API key for Claude Code / Cursor.",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

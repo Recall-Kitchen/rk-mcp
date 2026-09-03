@@ -4,15 +4,18 @@ Go client and examples for [Recall Kitchen](https://recallkitchen.com/) MCP.
 
 Recall Kitchen searches U.S. CPSC, FDA food, FDA MedWatch, and USDA product recalls. Vehicle/VIN search is coming soon.
 
-## MCP server
+## Hosted MCP
 
-```
-https://app.recallkitchen.com/mcp
-```
+Public streamable HTTP: [https://app.recallkitchen.com/mcp](https://app.recallkitchen.com/mcp). Client config: [`.mcp.json`](.mcp.json). Docs: [recallkitchen.com/docs](https://recallkitchen.com/docs/).
+
+- **Free with API key** — mint a key via MCP `signup` or [Integrations](https://app.recallkitchen.com/#/integrations). Send `X-API-Key: rk_...` (required for Grok) or `Authorization: Bearer rk_...` (Claude/Cursor). Env placeholder: `RECALL_KITCHEN_API_KEY`.
+- **Anonymous x402** — USDC on Base at $0.025/call, no signup.
+- **Account tools** (watches, inventory, notifications) need a key.
+- **Rate limits** — about 60 tool calls/hour unverified vs about 600/hour after verified sign-in at [app.recallkitchen.com](https://app.recallkitchen.com).
 
 Local: `http://localhost:8080/mcp`. Server card: `https://app.recallkitchen.com/.well-known/mcp/server-card.json`.
 
-Tool reference on the product docs: [recallkitchen.com/docs/#mcp](https://recallkitchen.com/docs/#mcp). Implementation notes in the main repo: [docs/mcp.md](https://github.com/Recall-Kitchen/recall-kitchen/blob/master/docs/mcp.md).
+Tool reference: [recallkitchen.com/docs/#mcp](https://recallkitchen.com/docs/#mcp). Implementation notes: [docs/mcp.md](https://github.com/Recall-Kitchen/recall-kitchen/blob/master/docs/mcp.md).
 
 ## Auth
 
@@ -95,7 +98,7 @@ See [examples/go](examples/go/).
 
 - **Grok**: `X-API-Key` header (see above).
 - **Claude Code**: `claude mcp add --transport http recall-kitchen https://app.recallkitchen.com/mcp --header "Authorization: Bearer ${RK_API_KEY}"`
-- **Cursor**: `headers.Authorization` = `Bearer ${env:RECALL_KITCHEN_API_KEY}` in `mcp.json`.
+- **Cursor**: copy [`.mcp.json`](.mcp.json) (`X-API-Key` + `RECALL_KITCHEN_API_KEY`). `Authorization: Bearer` also works.
 
 ## Support
 
