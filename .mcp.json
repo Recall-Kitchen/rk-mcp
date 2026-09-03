@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "recall-kitchen": {
+      "type": "http",
+      "url": "https://app.recallkitchen.com/mcp",
+      "headers": {
+        "X-API-Key": "${RECALL_KITCHEN_API_KEY}"
+      }
+    }
+  }
+}
