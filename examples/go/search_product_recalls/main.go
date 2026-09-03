@@ -16,11 +16,13 @@ func main() {
 	var (
 		serverURL string
 		query     string
+		source    string
 		location  string
 		limit     int
 	)
 	flag.StringVar(&serverURL, "address", "https://app.recallkitchen.com/mcp", "MCP server HTTP endpoint")
 	flag.StringVar(&query, "query", "contamination", "search query")
+	flag.StringVar(&source, "source", "", "optional source filter (cpsc, fdafoodsafety, FDAMedWatch, usda, nhtsa)")
 	flag.StringVar(&location, "location", "", "optional location filter (e.g. Iowa)")
 	flag.IntVar(&limit, "limit", 3, "max results (1-100)")
 	flag.Parse()
@@ -44,6 +46,7 @@ func main() {
 
 	res, err := cc.SearchProductRecallsOpts(context.Background(), rkmcp.SearchOptions{
 		Query:    query,
+		Source:   source,
 		Location: location,
 		Limit:    limit,
 	})

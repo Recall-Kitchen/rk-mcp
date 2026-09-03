@@ -7,6 +7,6 @@ export RK_API_KEY=rk_...
 go run . -query spinach -location Iowa -limit 3
 ```
 
-Flags: `-address`, `-query`, `-location`, `-limit`.
+Flags: `-address`, `-query`, `-source` (`nhtsa`, `cpsc`, ...), `-location`, `-limit`.
 
 Auth: `RK_API_KEY` / `RECALL_KITCHEN_API_KEY`, or `X402_EVM_PRIVATE_KEY` for anonymous USDC on Base. Without either, the program prints setup help and exits 0 (so CI can compile-run it).

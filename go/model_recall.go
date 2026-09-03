@@ -57,7 +57,7 @@ type ExtractedContact struct {
 // SearchOptions are optional filters for search_product_recalls.
 type SearchOptions struct {
 	Query    string
-	Source   string // cpsc, fdafoodsafety, FDAMedWatch, usda
+	Source   string // cpsc, fdafoodsafety, FDAMedWatch, usda, nhtsa
 	Since    string // YYYY-MM-DD
 	Until    string // YYYY-MM-DD
 	Location string
@@ -71,6 +71,7 @@ type IdentifierOptions struct {
 	LotCode     string
 	ModelNumber string
 	ProductName string
+	VIN         string
 	Offset      int
 	Limit       int
 }

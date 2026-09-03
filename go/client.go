@@ -231,12 +231,15 @@ func (c *client) SearchRecallsByIdentifier(ctx context.Context, opts IdentifierO
 	if s := strings.TrimSpace(opts.ProductName); s != "" {
 		args["product_name"] = s
 	}
+	if s := strings.TrimSpace(opts.VIN); s != "" {
+		args["vin"] = s
+	}
 	if opts.Offset > 0 {
 		args["offset"] = opts.Offset
 	}
 	args["limit"] = clampLimit(opts.Limit)
 	if len(args) == 1 { // only limit
-		return nil, fmt.Errorf("upc, lot_code, model_number, or product_name is required")
+		return nil, fmt.Errorf("upc, lot_code, model_number, product_name, or vin is required")
 	}
 
 	var out SearchResult

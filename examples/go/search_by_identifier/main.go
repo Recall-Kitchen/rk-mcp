@@ -19,13 +19,15 @@ func main() {
 		lot         string
 		model       string
 		productName string
+		vin         string
 		limit       int
 	)
 	flag.StringVar(&serverURL, "address", "https://app.recallkitchen.com/mcp", "MCP server HTTP endpoint")
 	flag.StringVar(&upc, "upc", "", "UPC or EAN")
 	flag.StringVar(&lot, "lot", "", "lot or batch code")
 	flag.StringVar(&model, "model", "", "model number")
-	flag.StringVar(&productName, "name", "infant formula", "extracted product name")
+	flag.StringVar(&productName, "name", "", "extracted product name")
+	flag.StringVar(&vin, "vin", "", "17-character VIN (NHTSA year/make match)")
 	flag.IntVar(&limit, "limit", 3, "max results")
 	flag.Parse()
 
@@ -43,11 +45,15 @@ func main() {
 	}
 	defer cc.Close()
 
+	if upc == "" && lot == "" && model == "" && productName == "" && vin == "" {
+		productName = "infant formula"
+	}
 	res, err := cc.SearchRecallsByIdentifier(context.Background(), rkmcp.IdentifierOptions{
 		UPC:         upc,
 		LotCode:     lot,
 		ModelNumber: model,
 		ProductName: productName,
+		VIN:         vin,
 		Limit:       limit,
 	})
 	if err != nil {
