@@ -3,7 +3,7 @@ module github.com/Recall-Kitchen/rk-mcp/go
 go 1.26.1
 
 require (
-	github.com/modelcontextprotocol/go-sdk v1.7.0
+	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/stretchr/testify v1.12.1
 	github.com/x402-foundation/x402/go v0.0.0-20260529172747-45d81d46e5bd
 )
