@@ -63,7 +63,7 @@ Search results truncate descriptions and cap extracted products at 5. Call `get_
 
 Watch patterns use the same syntax as the search box: words are AND, `OR` is or, `-term` excludes, `"quoted phrase"` is a phrase.
 
-Prompts: `check_product`, `check_upc`, `scan_image` (photo, beta), `list_vin_campaigns` (lists NHTSA campaigns for the year and make's NHTSA campaigns only; confirm at nhtsa.gov/recalls). Resources: `recall://docs/tools`, `recall://docs/sources`.
+Prompts: `check_product`, `check_upc`, `scan_image` (photo, beta), `list_vin_campaigns` (lists NHTSA campaigns for the year and make only; confirm at nhtsa.gov/recalls). Resources: `recall://docs/tools`, `recall://docs/sources`.
 
 ## Go client
 
