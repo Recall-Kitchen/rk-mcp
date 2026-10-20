@@ -47,10 +47,10 @@ export RK_API_KEY=rk_...
 | Tool | Use |
 |---|---|
 | `search_product_recalls` | Keyword search. Optional `source`, `since`/`until` (`YYYY-MM-DD`), `location`, `offset`, `limit` (1–100, default 3). |
-| `search_recalls_by_identifier` | Exact UPC, lot, model, extracted product name, or VIN (local year/make decode for NHTSA). |
+| `search_recalls_by_identifier` | Exact UPC, product name, or vehicle make and model. A VIN only lists that make's NHTSA campaigns; confirm the specific vehicle at nhtsa.gov/recalls. Lot-code matching is not reliable. |
 | `search_product_recalls_by_upc` | Look up a UPC and match extracted recall UPCs. `found=false` if unknown. |
 | `lookup_product` | Catalog / USDA branded-food info. Does not search recalls. |
-| `search_product_recalls_from_image` | Public HTTPS URL, `data:image/...;base64` URI, or MCP image content. No local file paths. |
+| `search_product_recalls_from_image` | Photo search (beta). Public HTTPS URL, `data:image/...;base64` URI, or MCP image content. No local file paths. |
 | `get_product_recall` | Full description and extracted lots, UPCs, models, locations, contacts, image URLs. |
 
 Search results truncate descriptions and cap extracted products at 5. Call `get_product_recall` for the full notice.
@@ -63,7 +63,7 @@ Search results truncate descriptions and cap extracted products at 5. Call `get_
 
 Watch patterns use the same syntax as the search box: words are AND, `OR` is or, `-term` excludes, `"quoted phrase"` is a phrase.
 
-Prompts: `check_product`, `check_upc`, `scan_image`, `check_vin`. Resources: `recall://docs/tools`, `recall://docs/sources`.
+Prompts: `check_product`, `check_upc`, `scan_image` (photo, beta), `check_vin` (lists the make's NHTSA campaigns only; confirm at nhtsa.gov/recalls). Resources: `recall://docs/tools`, `recall://docs/sources`.
 
 ## Go client
 
@@ -74,7 +74,7 @@ cc, err := rkmcp.NewClient(rkmcp.Config{
 })
 recalls, err := cc.SearchProductRecalls(ctx, "contamination", 3)
 detail, err := cc.GetProductRecall(ctx, recalls[0].ID)
-hits, err := cc.SearchRecallsByIdentifier(ctx, rkmcp.IdentifierOptions{LotCode: "I31C"})
+hits, err := cc.SearchRecallsByIdentifier(ctx, rkmcp.IdentifierOptions{UPC: "012345678905"})
 ```
 
 `APIKey` is also read from `RK_API_KEY` or `RECALL_KITCHEN_API_KEY`. The client sends `X-API-Key`. Anonymous clients can set `EVMPrivateKey` / `X402_EVM_PRIVATE_KEY` instead.
