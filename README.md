@@ -1,3 +1,5 @@
+[![Rk Mcp on AI Agents Listing](https://aiagentslisting.com/rk-mcp/badge.svg?claim=d422b6dde784d2ae312ef7daf1f31bfc)](https://aiagentslisting.com/mcp/rk-mcp)
+
 # rk-mcp
 
 Go client and examples for [Recall Kitchen](https://recallkitchen.com/) MCP.
