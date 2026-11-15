@@ -1,5 +1,6 @@
 [![Rk Mcp on AI Agents Listing](https://aiagentslisting.com/rk-mcp/badge.svg?claim=d422b6dde784d2ae312ef7daf1f31bfc)](https://aiagentslisting.com/mcp/rk-mcp)
 [![Recall Kitchen on mcprush](https://mcprush.com/badge/recall-kitchen-mcp/score.svg)](https://mcprush.com/to/recall-kitchen-mcp?ref=badge)
+[![Listed on MCP Collection](https://mcpcollection.com/badge/recall-kitchen.svg)](https://mcpcollection.com/server/recall-kitchen)
 
 # rk-mcp
 
