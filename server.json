@@ -5,6 +5,13 @@
   "description": "Search U.S. CPSC, FDA food, FDA MedWatch, and USDA product recalls via hosted MCP.",
   "version": "1.0.0",
   "websiteUrl": "https://recallkitchen.com",
+  "icons": [
+    {
+      "src": "https://recallkitchen.com/images/logo.png",
+      "mimeType": "image/png",
+      "sizes": ["320x320"]
+    }
+  ],
   "repository": {
     "url": "https://github.com/Recall-Kitchen/rk-mcp",
     "source": "github"
