@@ -4,7 +4,7 @@
 
 # rk-mcp
 
-Go client and examples for [Recall Kitchen](https://recallkitchen.com/) MCP.
+Go client and examples for the [Recall Kitchen](https://recallkitchen.com/?utm_source=mseep&utm_campaign=mcp-directory) MCP server (hosted, Streamable HTTP).
 
 Recall Kitchen searches U.S. CPSC, FDA food, FDA MedWatch, USDA, and NHTSA vehicle recalls.
 
